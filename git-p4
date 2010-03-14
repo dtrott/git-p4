@@ -1036,7 +1036,7 @@ class P4Sync(Command):
                 continue
 
             relPath = self.stripRepoPath(file['path'], branchPrefixes)
-            if file["action"] == "delete":
+            if file["action"] in ('delete', 'move/delete'):
                 self.gitStream.write("D %s\n" % relPath)
             else:
                 data = file['data']

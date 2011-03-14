@@ -45,6 +45,8 @@ def p4_build_cmd(cmd):
         real_cmd += "-c %s " % client
 
     real_cmd += "%s" % (cmd)
+    if real_cmd.find("add -f")<0 and real_cmd.find("changes")<0:
+		real_cmd = real_cmd.replace("@","%40")
     if verbose:
         print real_cmd
     return real_cmd
@@ -714,7 +716,7 @@ class P4Submit(Command):
         system(applyPatchCmd)
 
         for f in filesToAdd:
-            p4_system("add \"%s\"" % f)
+            p4_system("add -f \"%s\"" % f)
         for f in filesToDelete:
             p4_system("revert \"%s\"" % f)
             p4_system("delete \"%s\"" % f)
@@ -1061,6 +1063,7 @@ class P4Sync(Command):
 
     def streamOneP4Deletion(self, file):
         relPath = self.stripRepoPath(file['path'], self.branchPrefixes)
+        relPath = self.wildcard_decode(relPath)
         if verbose:
             sys.stderr.write("delete %s\n" % relPath)
         self.gitStream.write("D %s\n" % relPath)
@@ -1763,7 +1766,7 @@ class P4Sync(Command):
 
                 changes.sort()
             else:
-                if not isinstance(self, P4Clone) and not self.p4BranchesInGit:
+                if not self.p4BranchesInGit:
                     die("No remote p4 branches.  Perhaps you never did \"git p4 clone\" in here.");
                 if self.verbose:
                     print "Getting p4 changes for %s...%s" % (', '.join(self.depotPaths),
